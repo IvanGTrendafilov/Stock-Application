@@ -100,4 +100,10 @@ public class Stock {
 		return true;
 	}
 
+	@Override
+	public String toString() {
+		return "Stock [stockSymbol=" + stockSymbol + ", stockType=" + stockType + ", lastDividend=" + lastDividend
+				+ ", fixedDividend=" + fixedDividend + ", parValue=" + parValue + "]";
+	}
+
 }

@@ -17,8 +17,7 @@ public class SimpleController {
 	}
 
 	@RequestMapping("/")
-	public String index() {
-		return null;// stockService.calculateDividendYield("").toPlainString() +
-					// " TOVA EEEEEEEEEEEE";
+	public void index() {
+		System.out.println("This is Rest controller for testing purpose");
 	}
 }

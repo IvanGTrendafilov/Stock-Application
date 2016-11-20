@@ -1,12 +1,15 @@
 package trendafilov.ivan.jpmorgan.stock.services.impl;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import trendafilov.ivan.jpmorgan.stock.exceptions.StockServiceException;
 import trendafilov.ivan.jpmorgan.stock.model.Stock;
+import trendafilov.ivan.jpmorgan.stock.model.Trade;
 import trendafilov.ivan.jpmorgan.stock.repositories.StockRepository;
 import trendafilov.ivan.jpmorgan.stock.services.StockService;
 
@@ -69,5 +72,52 @@ public class StockServiceImpl implements StockService {
 		BigDecimal result = BigDecimal.ZERO;
 		result = price.divide(calculateDividendYield(stockSymbol, price), SCALE, BigDecimal.ROUND_HALF_DOWN);
 		return result.setScale(2, BigDecimal.ROUND_HALF_DOWN);
+	}
+
+	@Override
+	public void recordTrade(final Trade trade) throws StockServiceException {
+		if (trade == null) {
+			throw new StockServiceException("Trade can not be null!");
+		}
+
+		if (trade.getStock() == null) {
+			throw new StockServiceException("This trade: " + trade + " doesn't have a stock!");
+		}
+
+		if (trade.getQuantity().signum() <= 0) {
+			throw new StockServiceException("This quantity: " + trade.getQuantity() + " of trade is negative or zero!");
+		}
+
+		isEqualOrLessThanZero(trade.getPrice());
+		try {
+			stockRepository.saveTrade(trade);
+		} catch (final Exception e) {
+			throw new StockServiceException(e.getMessage());
+		}
+	}
+
+	@Override
+	public BigDecimal calculateStockPriceInPastTime(final long time) throws StockServiceException {
+		final Map<Stock, Trade> tradesByTime = stockRepository.getTradesByTime(time);
+		if (tradesByTime.isEmpty()) {
+			throw new StockServiceException("There isn't recorded trades in past " + time + " miliseconds!");
+		}
+		BigDecimal price = BigDecimal.ZERO;
+		BigInteger quantity = BigInteger.ZERO;
+		for (final Stock stock : tradesByTime.keySet()) {
+			final Trade trade = tradesByTime.get(stock);
+			price = price.add(trade.getPrice().multiply(new BigDecimal(trade.getQuantity())));
+			quantity = quantity.add(trade.getQuantity());
+		}
+		BigDecimal result = BigDecimal.ZERO;
+		result = price.divide(new BigDecimal(quantity), SCALE, BigDecimal.ROUND_HALF_DOWN);
+		return result.setScale(2, BigDecimal.ROUND_HALF_DOWN);
+	}
+
+	@Override
+	public BigDecimal calculateGBCE() {
+		// I didn't find anything for this GBCE and I am not sure what exactly
+		// is this by specification
+		return null;
 	}
 }
