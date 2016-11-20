@@ -17,7 +17,6 @@ public class StockDB {
 
 	private static Map<String, Stock> stockMap;
 	private static Map<Stock, Trade> tradeMap;
-	private Date timestamp;
 
 	static {
 		// Stock map that contains stock records
